@@ -1,0 +1,133 @@
+https://www.linkedin.com/posts/aditya-chikte-2176a21b5_aws-vpc-vpcpeering-activity-7208198749326651392-zzf-?utm_source=share&utm_medium=member_desktop
+
+# AWS VPC Peering Setup with EC2 Instances
+
+This guide provides step-by-step instructions to set up two VPCs (Pune_VPC and Mumbai_VPC) with public and private subnets, launch EC2 instances in both VPCs, and establish a peering connection between the VPCs.
+
+## Prerequisites
+- AWS Account
+- SSH Key Pair to access EC2 instances
+- IAM User with permissions to create VPCs, Subnets, EC2 Instances, Internet Gateways, and Route Tables
+
+---
+
+## Step 1: Create VPCs
+
+### Create Pune_VPC:
+1. Navigate to **VPC Dashboard**.
+2. Click on **Create VPC**.
+3. Name the VPC as `Pune_VPC`.
+4. Set the **IPv4 CIDR block** as `10.0.0.0/16`.
+5. Leave other options as default and click **Create VPC**.
+
+### Create Mumbai_VPC:
+1. Repeat the above steps for the second VPC.
+2. Name the VPC as `Mumbai_VPC`.
+3. Set the **IPv4 CIDR block** as `192.168.0.0/16`.
+4. Click **Create VPC**.
+
+---
+
+## Step 2: Create Subnets
+
+### Pune_VPC Subnets:
+1. Navigate to **Subnets** and click on **Create Subnet**.
+2. Select `Pune_VPC`.
+3. Create two subnets:
+   - **Public Subnet**: CIDR `10.0.1.0/24`, enable auto-assign public IP.
+   - **Private Subnet**: CIDR `10.0.2.0/24`.
+
+### Mumbai_VPC Subnets:
+1. Repeat the same process for `Mumbai_VPC`.
+2. Create two subnets:
+   - **Public Subnet**: CIDR `192.168.1.0/24`, enable auto-assign public IP.
+   - **Private Subnet**: CIDR `192.168.2.0/24`.
+
+---
+
+## Step 3: Create and Attach Internet Gateways
+
+### Pune_VPC:
+1. Go to **Internet Gateways**.
+2. Click on **Create Internet Gateway**, name it `IGW-Pune`.
+3. Attach it to `Pune_VPC`.
+
+### Mumbai_VPC:
+1. Repeat for `Mumbai_VPC` by creating `IGW-Mumbai`.
+2. Attach it to `Mumbai_VPC`.
+
+---
+
+## Step 4: Configure Route Tables
+
+### Pune_VPC Route Table:
+1. Navigate to **Route Tables**.
+2. Select the route table associated with the **Public Subnet** of `Pune_VPC`.
+3. Add a new route:
+   - Destination: `0.0.0.0/0`
+   - Target: `IGW-Pune`.
+
+### Mumbai_VPC Route Table:
+1. Repeat the process for the **Public Subnet** of `Mumbai_VPC`.
+2. Add the route:
+   - Destination: `0.0.0.0/0`
+   - Target: `IGW-Mumbai`.
+
+---
+
+## Step 5: Create VPC Peering Connection
+
+1. Go to **Peering Connections** under **VPC Dashboard**.
+2. Click **Create Peering Connection**.
+3. Set the requester VPC as `Pune_VPC` and the accepter VPC as `Mumbai_VPC`.
+4. Name it `Pune-Mumbai-Peer` and create the connection.
+5. **Accept the Peering Connection** by going to **Peering Connections** and accepting the request.
+
+---
+
+## Step 6: Update Route Tables for VPC Peering
+
+### Pune_VPC Route Table:
+1. Go to **Route Tables** and select the route table for `Pune_VPC`.
+2. Add a new route:
+   - Destination: `192.168.0.0/16` (Mumbai_VPC CIDR).
+   - Target: **Pune-Mumbai-Peer**.
+
+### Mumbai_VPC Route Table:
+1. Similarly, for the **Mumbai_VPC** route table:
+   - Destination: `10.0.0.0/16` (Pune_VPC CIDR).
+   - Target: **Pune-Mumbai-Peer**.
+
+---
+
+## Step 7: Launch EC2 Instances
+
+### Pune_VPC:
+1. Launch two **Amazon Linux 2** instances in `Pune_VPC`.
+2. One instance in the **Public Subnet** with auto-assign public IP.
+3. One instance in the **Private Subnet** without public IP.
+
+### Mumbai_VPC:
+1. Launch two **Amazon Linux 2** instances in `Mumbai_VPC`.
+2. One in the **Public Subnet** with auto-assign public IP.
+3. One in the **Private Subnet** without public IP.
+
+---
+
+## Step 8: Test VPC Peering Connection
+
+1. SSH into the public EC2 instance in `Pune_VPC`.
+2. Try to ping the private EC2 instance in `Mumbai_VPC` using its private IP.
+3. Similarly, SSH into the public EC2 instance in `Mumbai_VPC` and ping the private instance in `Pune_VPC`.
+
+---
+
+## Conclusion
+
+You have successfully set up two VPCs (`Pune_VPC` and `Mumbai_VPC`) connected via a VPC Peering connection, with EC2 instances in public and private subnets. You can now test packet transfer between the instances across VPCs.
+
+---
+
+### Notes:
+- Ensure security groups and network ACLs are properly configured to allow communication between VPCs.
+- Replace placeholders (e.g., instance type, key pair) with values specific to your environment.
